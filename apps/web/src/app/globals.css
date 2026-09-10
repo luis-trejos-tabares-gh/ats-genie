@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-mark: var(--mark);
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-source-serif);
+}
+
+:root {
+  --background: #f4efe6;
+  --foreground: #1c1917;
+  --card: #faf7f1;
+  --card-foreground: #1c1917;
+  --primary: #1c1917;
+  --primary-foreground: #faf7f1;
+  --secondary: #e7dfd2;
+  --secondary-foreground: #1c1917;
+  --muted: #ebe4d8;
+  --muted-foreground: #57534e;
+  --accent: #9a3412;
+  --accent-foreground: #faf7f1;
+  --border: #d6cbb8;
+  --input: #d6cbb8;
+  --ring: #9a3412;
+  --mark: #9a3412;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  background-image:
+    linear-gradient(180deg, rgba(28, 25, 23, 0.03), transparent 220px),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 79px,
+      rgba(28, 25, 23, 0.03) 80px
+    );
+}
+
+::selection {
+  background: color-mix(in srgb, var(--mark) 22%, transparent);
+}

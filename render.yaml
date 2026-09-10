@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ats-assistant-api
+    runtime: python
+    rootDir: apps/api
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: MAX_UPLOAD_BYTES
+        value: "5242880"
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "20"
