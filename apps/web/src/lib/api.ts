@@ -2,9 +2,11 @@ import type {
   AnalyzeResponse,
   AssembleRequest,
   AssembleResponse,
+  DetectedLanguage,
   GenerateFormat,
   GenerateRequest,
   HealthResponse,
+  OutputLanguage,
   ResumeSections,
 } from "./types";
 
@@ -27,9 +29,10 @@ export async function getHealth(): Promise<HealthResponse> {
   return response.json() as Promise<HealthResponse>;
 }
 
-export async function analyzeResume(file: File): Promise<AnalyzeResponse> {
+export async function analyzeResume(file: File, outputLanguage: OutputLanguage): Promise<AnalyzeResponse> {
   const form = new FormData();
   form.append("file", file);
+  form.append("outputLanguage", outputLanguage);
   const response = await fetch(`${API_URL}/v1/analyze`, {
     method: "POST",
     body: form,
@@ -38,8 +41,11 @@ export async function analyzeResume(file: File): Promise<AnalyzeResponse> {
   return response.json() as Promise<AnalyzeResponse>;
 }
 
-export async function assembleResume(sections: ResumeSections): Promise<AssembleResponse> {
-  const payload: AssembleRequest = { sections };
+export async function assembleResume(
+  sections: ResumeSections,
+  outputLanguage: OutputLanguage,
+): Promise<AssembleResponse> {
+  const payload: AssembleRequest = { sections, outputLanguage };
   const response = await fetch(`${API_URL}/v1/assemble`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -52,8 +58,9 @@ export async function assembleResume(sections: ResumeSections): Promise<Assemble
 export async function generateResume(
   sections: ResumeSections,
   format: GenerateFormat,
+  language?: DetectedLanguage | null,
 ): Promise<Blob> {
-  const payload: GenerateRequest = { sections, format };
+  const payload: GenerateRequest = { sections, format, language };
   const response = await fetch(`${API_URL}/v1/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -16,6 +16,9 @@ export type ResumeSectionKey =
   | "education"
   | "extras";
 
+export type OutputLanguage = "keep" | "en" | "es" | "pt" | "de";
+export type DetectedLanguage = "en" | "es" | "pt" | "de";
+
 export interface Issue {
   id: string;
   category: IssueCategory;
@@ -61,18 +64,24 @@ export interface AnalyzeResponse {
   parsed: {
     filename: string;
     textPreview: string;
+    truncated: boolean;
   };
   issues: Issue[];
   sections: ResumeSections;
+  detectedLanguage?: DetectedLanguage | null;
+  outputLanguage?: DetectedLanguage | null;
 }
 
 export interface AssembleRequest {
   sections: ResumeSections;
+  outputLanguage?: OutputLanguage;
 }
 
 export interface AssembleResponse {
   recommendation: ResumeSections;
   notes: Issue[];
+  detectedLanguage?: DetectedLanguage | null;
+  outputLanguage?: DetectedLanguage | null;
 }
 
 export type GenerateFormat = "docx" | "pdf";
@@ -80,6 +89,7 @@ export type GenerateFormat = "docx" | "pdf";
 export interface GenerateRequest {
   sections: ResumeSections;
   format: GenerateFormat;
+  language?: DetectedLanguage | null;
 }
 
 export interface HealthResponse {

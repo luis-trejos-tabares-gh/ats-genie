@@ -8,7 +8,7 @@ A small, one-session tool to analyze or assemble a resume so applicant tracking 
 - **Analyze** (`/analyze`) — upload a PDF or DOCX, get guided issues, download DOCX or PDF
 - **Assemble** (`/assemble`) — write each section in plain text, get an ATS-structured recommendation, download
 
-Foundation slice: real extract + deterministic ATS checks + file generation. Groq is wired (`GROQ_API_KEY` / `GROQ_MODEL`) but not called yet.
+Analyze and assemble call GPT-OSS 120B via Groq. Files over 3 MB are rejected. Long text is truncated before the model. Each IP gets 3 AI checks per hour; the shared Groq budget may pause the tool for everyone.
 
 ## Privacy
 
@@ -39,8 +39,16 @@ source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 # Optional: set GROQ_API_KEY. Not required for the foundation stubs.
-uvicorn app.main:app --reload --port 8000
 ```
+
+From the repo root:
+
+```bash
+make api        # gunicorn + uvicorn workers (default :8000)
+make api-dev    # uvicorn --reload for local iteration
+```
+
+Or `./apps/api/start.sh`. Override with `PORT`, `WORKERS` / `WEB_CONCURRENCY`, `TIMEOUT`, `HOST`.
 
 Health check: `GET http://127.0.0.1:8000/health`
 
@@ -70,8 +78,12 @@ Open [http://localhost:3000](http://localhost:3000). Consent is required before 
 | `GROQ_API_KEY` | Groq secret. Never put this in the Next.js client |
 | `GROQ_MODEL` | Default `openai/gpt-oss-120b` |
 | `ALLOWED_ORIGIN` | Comma-separated CORS origins (your Vercel URL in production) |
-| `MAX_UPLOAD_BYTES` | Default `5242880` (5 MB) |
-| `RATE_LIMIT_PER_MINUTE` | Default `20` per IP |
+| `MAX_UPLOAD_BYTES` | Default `3145728` (3 MB) |
+| `RATE_LIMIT_PER_MINUTE` | Burst cap, default `5` |
+| `SESSION_LIMIT` | AI checks per IP per hour, default `3` |
+| `GLOBAL_MIN_INTERVAL` | Seconds between Groq calls, default `20` |
+| `GLOBAL_DAILY_LIMIT` | Shared Groq calls per UTC day, default `30` |
+| `RATE_LIMIT_SALT` | Salt for IP hashes (not resume data) |
 
 ## Deploy
 

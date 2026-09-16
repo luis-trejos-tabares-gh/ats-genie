@@ -3,6 +3,7 @@ from app.models.schemas import (
     AssembleRequest,
     AssembleResponse,
     ContactInfo,
+    DetectedLanguage,
     EducationItem,
     ExperienceItem,
     GenerateFormat,
@@ -11,6 +12,7 @@ from app.models.schemas import (
     Issue,
     IssueCategory,
     IssueSeverity,
+    OutputLanguage,
     ParsedDocument,
     ResumeSections,
 )
@@ -20,6 +22,7 @@ __all__ = [
     "AssembleRequest",
     "AssembleResponse",
     "ContactInfo",
+    "DetectedLanguage",
     "EducationItem",
     "ExperienceItem",
     "GenerateFormat",
@@ -28,6 +31,7 @@ __all__ = [
     "Issue",
     "IssueCategory",
     "IssueSeverity",
+    "OutputLanguage",
     "ParsedDocument",
     "ResumeSections",
 ]

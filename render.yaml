@@ -5,7 +5,7 @@ services:
     rootDir: apps/api
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: bash start.sh
     healthCheckPath: /health
     envVars:
       - key: GROQ_API_KEY
@@ -15,6 +15,16 @@ services:
       - key: ALLOWED_ORIGIN
         sync: false
       - key: MAX_UPLOAD_BYTES
-        value: "5242880"
+        value: "3145728"
       - key: RATE_LIMIT_PER_MINUTE
+        value: "5"
+      - key: SESSION_LIMIT
+        value: "3"
+      - key: SESSION_WINDOW_SECONDS
+        value: "3600"
+      - key: GLOBAL_MIN_INTERVAL
         value: "20"
+      - key: GLOBAL_DAILY_LIMIT
+        value: "30"
+      - key: RATE_LIMIT_SALT
+        sync: false

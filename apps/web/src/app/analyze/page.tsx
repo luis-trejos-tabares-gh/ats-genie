@@ -1,17 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { OutputLanguageSelect } from "@/components/output-language-select";
 import { PrivacyConsent } from "@/components/privacy-consent";
+import { ResumeSectionsCard } from "@/components/resume-sections-card";
+import { UsageNotes } from "@/components/usage-notes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { OutputLanguage } from "@/i18n/config";
+import { useT } from "@/i18n/provider";
 import { analyzeResume, downloadBlob, generateResume } from "@/lib/api";
 import type { AnalyzeResponse } from "@/lib/types";
 
 export default function AnalyzePage() {
+  const { t } = useT();
   const [consented, setConsented] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [outputLanguage, setOutputLanguage] = useState<OutputLanguage>("keep");
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -22,9 +29,9 @@ export default function AnalyzePage() {
     setBusy(true);
     setError(null);
     try {
-      setResult(await analyzeResume(file));
+      setResult(await analyzeResume(file, outputLanguage));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Analysis failed");
+      setError(err instanceof Error ? err.message : t("analyze.failed"));
     } finally {
       setBusy(false);
     }
@@ -35,10 +42,10 @@ export default function AnalyzePage() {
     setBusy(true);
     setError(null);
     try {
-      const blob = await generateResume(result.sections, format);
+      const blob = await generateResume(result.sections, format, result.outputLanguage);
       downloadBlob(blob, `resume.${format}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Download failed");
+      setError(err instanceof Error ? err.message : t("analyze.failed"));
     } finally {
       setBusy(false);
     }
@@ -46,23 +53,21 @@ export default function AnalyzePage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <p className="text-xs font-medium uppercase tracking-[0.22em] text-mark">Analyze</p>
-      <h1 className="mt-3 font-serif text-3xl tracking-tight">Guided corrections</h1>
-      <p className="mt-3 text-muted-foreground">
-        Upload a PDF or DOCX. We parse it in memory, list issues, and let you download a cleaner
-        file. Nothing is saved.
-      </p>
+      <p className="text-xs font-medium uppercase tracking-[0.22em] text-mark">{t("analyze.kicker")}</p>
+      <h1 className="mt-3 font-serif text-3xl tracking-tight">{t("analyze.title")}</h1>
+      <p className="mt-3 text-muted-foreground">{t("analyze.lead")}</p>
 
       <Card className="mt-8">
         <CardHeader>
-          <CardTitle>Consent, then upload</CardTitle>
-          <CardDescription>The checkbox is required before a file can leave your browser.</CardDescription>
+          <CardTitle>{t("analyze.cardTitle")}</CardTitle>
+          <CardDescription>{t("analyze.cardDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={onAnalyze}>
             <PrivacyConsent checked={consented} onCheckedChange={setConsented} />
+            <UsageNotes variant="analyze" />
             <div className="space-y-2">
-              <Label htmlFor="cv-file">Resume file</Label>
+              <Label htmlFor="cv-file">{t("analyze.fileLabel")}</Label>
               <Input
                 id="cv-file"
                 type="file"
@@ -73,10 +78,19 @@ export default function AnalyzePage() {
                   setResult(null);
                 }}
               />
-              <p className="text-xs text-muted-foreground">PDF or DOCX, 5 MB maximum.</p>
+              <p className="text-xs text-muted-foreground">{t("analyze.fileHint")}</p>
             </div>
+            <OutputLanguageSelect
+              id="analyze-output-language"
+              value={outputLanguage}
+              disabled={!consented}
+              onChange={(value) => {
+                setOutputLanguage(value);
+                setResult(null);
+              }}
+            />
             <Button type="submit" disabled={!consented || !file || busy}>
-              {busy ? "Working…" : "Analyze resume"}
+              {busy ? t("analyze.working") : t("analyze.submit")}
             </Button>
           </form>
         </CardContent>
@@ -92,7 +106,7 @@ export default function AnalyzePage() {
         <section className="mt-8 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Parsed preview</CardTitle>
+              <CardTitle>{t("analyze.previewTitle")}</CardTitle>
               <CardDescription>{result.parsed.filename}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -104,8 +118,8 @@ export default function AnalyzePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Issues</CardTitle>
-              <CardDescription>Foundation stub — full category wizard comes next.</CardDescription>
+              <CardTitle>{t("analyze.issuesTitle")}</CardTitle>
+              <CardDescription>{t("analyze.issuesDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 text-sm">
@@ -122,12 +136,18 @@ export default function AnalyzePage() {
             </CardContent>
           </Card>
 
+          <ResumeSectionsCard
+            title={t("analyze.resultTitle")}
+            description={t("analyze.resultDesc")}
+            sections={result.sections}
+          />
+
           <div className="flex flex-wrap gap-3">
             <Button type="button" disabled={busy} onClick={() => onDownload("docx")}>
-              Download DOCX
+              {t("analyze.downloadDocx")}
             </Button>
             <Button type="button" variant="outline" disabled={busy} onClick={() => onDownload("pdf")}>
-              Download PDF
+              {t("analyze.downloadPdf")}
             </Button>
           </div>
         </section>

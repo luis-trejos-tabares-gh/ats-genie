@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 IssueSeverity = Literal["info", "warning", "error"]
 IssueCategory = Literal[
@@ -12,6 +12,8 @@ IssueCategory = Literal[
     "structure",
 ]
 GenerateFormat = Literal["docx", "pdf"]
+OutputLanguage = Literal["keep", "en", "es", "pt", "de"]
+DetectedLanguage = Literal["en", "es", "pt", "de"]
 
 
 class Issue(BaseModel):
@@ -32,18 +34,22 @@ class ContactInfo(BaseModel):
 
 
 class ExperienceItem(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     title: str | None = None
     employer: str | None = None
-    startDate: str | None = None
-    endDate: str | None = None
+    startDate: str | None = Field(default=None, validation_alias=AliasChoices("startDate", "start_date"))
+    endDate: str | None = Field(default=None, validation_alias=AliasChoices("endDate", "end_date"))
     bullets: list[str] = Field(default_factory=list)
 
 
 class EducationItem(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     school: str | None = None
     credential: str | None = None
-    startDate: str | None = None
-    endDate: str | None = None
+    startDate: str | None = Field(default=None, validation_alias=AliasChoices("startDate", "start_date"))
+    endDate: str | None = Field(default=None, validation_alias=AliasChoices("endDate", "end_date"))
 
 
 class ResumeSections(BaseModel):
@@ -58,26 +64,33 @@ class ResumeSections(BaseModel):
 class ParsedDocument(BaseModel):
     filename: str
     textPreview: str
+    truncated: bool = False
 
 
 class AnalyzeResponse(BaseModel):
     parsed: ParsedDocument
     issues: list[Issue]
     sections: ResumeSections
+    detectedLanguage: DetectedLanguage | None = None
+    outputLanguage: DetectedLanguage | None = None
 
 
 class AssembleRequest(BaseModel):
     sections: ResumeSections
+    outputLanguage: OutputLanguage = "keep"
 
 
 class AssembleResponse(BaseModel):
     recommendation: ResumeSections
     notes: list[Issue]
+    detectedLanguage: DetectedLanguage | None = None
+    outputLanguage: DetectedLanguage | None = None
 
 
 class GenerateRequest(BaseModel):
     sections: ResumeSections
     format: GenerateFormat = "docx"
+    language: DetectedLanguage | None = None
 
 
 class HealthResponse(BaseModel):

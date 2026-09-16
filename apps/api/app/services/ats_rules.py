@@ -3,20 +3,30 @@ import re
 from app.models.schemas import ContactInfo, Issue, ResumeSections
 
 HEADING_PATTERNS = (
-    r"\b(professional\s+summary|summary|profile)\b",
-    r"\b(skills|technical\s+skills)\b",
-    r"\b(experience|work\s+experience|employment)\b",
-    r"\b(education)\b",
+    r"\b(professional\s+summary|summary|profile|resumen|perfil|resumo|zusammenfassung|profil)\b",
+    r"\b(skills|technical\s+skills|competencias|competências|kenntnisse|f[aá]higkeiten)\b",
+    r"\b(experience|work\s+experience|employment|experiencia|experiência|berufserfahrung|beruf)\b",
+    r"\b(education|educaci[oó]n|forma[cç][aã]o|ausbildung|studium)\b",
 )
 
 DATE_PATTERNS = (
     re.compile(r"\b(19|20)\d{2}\s*[-–—]\s*(19|20)\d{2}\b"),
-    re.compile(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(19|20)\d{2}\b", re.I),
+    re.compile(
+        r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|ene|abr|ago|dic|jan|fev|mai|dez|m[aä]r|okt|dez)[a-zäöüß]*\s+(19|20)\d{2}\b",
+        re.I,
+    ),
     re.compile(r"\b\d{1,2}/\d{4}\b"),
 )
 
 
-def _issue(id_: str, category: str, severity: str, message: str, suggestion: str | None = None, field: str | None = None) -> Issue:
+def _issue(
+    id_: str,
+    category: str,
+    severity: str,
+    message: str,
+    suggestion: str | None = None,
+    field: str | None = None,
+) -> Issue:
     return Issue(
         id=id_,
         category=category,  # type: ignore[arg-type]
@@ -43,10 +53,14 @@ def check_text(text: str) -> list[Issue]:
         )
         return issues
 
-    missing = [label for label, pattern in zip(
-        ("Summary", "Skills", "Experience", "Education"),
-        HEADING_PATTERNS,
-    ) if not re.search(pattern, lower)]
+    missing = [
+        label
+        for label, pattern in zip(
+            ("Summary", "Skills", "Experience", "Education"),
+            HEADING_PATTERNS,
+        )
+        if not re.search(pattern, lower)
+    ]
     if missing:
         issues.append(
             _issue(
