@@ -5,7 +5,7 @@ from app.config import settings
 from app.routers import analyze, assemble, generate, health
 
 app = FastAPI(
-    title="ATS Assistant API",
+    title="ATS Genie API",
     version="0.1.0",
     description="Stateless resume analyze / assemble / generate. No persistence.",
 )

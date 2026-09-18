@@ -27,7 +27,7 @@
     "ats4": "Datas e marcadores consistentes.",
     "ats5": "Só os seus fatos — não inventamos empregos, diplomas ou datas.",
     "privacyKicker": "Privacidade, antes dos botões",
-    "privacyTitle": "Não armazenamos o seu currículo",
+    "privacyTitle": "Não criamos o seu currículo",
     "privacy1": "Não há contas nem histórico. O arquivo é processado na memória e descartado. Fechar a aba encerra a sessão. Não podemos recuperá-la. Guardamos um hash salgado de IP por cerca de uma hora só para o limite gratuito.",
     "privacy2": "As reescritas usam GPT-OSS 120B via Groq — um modelo de pesos abertos. A Groq não treina com entradas da API.",
     "limitsTitle": "Uso justo",
@@ -42,7 +42,7 @@
     "cardAssembleCta": "Abrir o montador"
   },
   "consent": {
-    "label": "Entendo que meu currículo é enviado ao nosso processador e a um modelo GPT-OSS de pesos abertos na Groq só nesta solicitação, não é armazenado e não é usado para treinar modelos.",
+    "label": "Entendo que meu currículo é enviado ao nosso processador e a um modelo GPT-OSS de pesos abertos na Groq só nesta solicitação, não é criado e não é usado para treinar modelos.",
     "noAccounts": "Sem contas. Fechar esta aba descarta tudo.",
     "noRecover": "Não podemos recuperar uma sessão perdida.",
     "noTrain": "A Groq não treina com dados da API."

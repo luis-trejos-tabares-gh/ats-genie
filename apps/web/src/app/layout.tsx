@@ -15,9 +15,9 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "ATS Assistant — Resume checks that parsers can read",
+  title: "ATS Genie — ATS-ready resumes that parse better",
   description:
-    "Analyze or assemble a resume for ATS parsers. Nothing is stored. Processing uses an open-weight model that is not trained on your data.",
+    "Generate ATS-ready resumes that parse better. Nothing is stored. Processing uses an open-weight model that is not trained on your data.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

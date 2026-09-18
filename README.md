@@ -1,4 +1,4 @@
-# ATS Assistant
+# ATS Genie
 
 A small, one-session tool to analyze or assemble a resume so applicant tracking systems can parse it. Nothing is stored. There are no accounts.
 
