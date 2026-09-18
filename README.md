@@ -18,13 +18,94 @@ Analyze and assemble call GPT-OSS 120B via Groq. Files over 3 MB are rejected. L
 - Enable **Zero Data Retention** in the Groq console
 - Closing the tab discards the session. We cannot recover it
 
-## Repo
+## Tech stack
+
+Two apps in one Git repo. The browser never holds the Groq key. Resume bytes live in a single request; the only on-disk state is salted IP hashes used for rate limits.
 
 ```text
-apps/web     Next.js — Vercel
+apps/web     Next.js 15 (App Router) — Vercel
 apps/api     FastAPI — Render
 render.yaml  Render Blueprint (rootDir: apps/api)
+Makefile     make api / make api-dev / make web
 ```
+
+```text
+Browser  --JSON/FormData-->  FastAPI  --chat.completions-->  Groq (GPT-OSS 120B)
+   ^                            |
+   |          DOCX/PDF bytes    |
+   +-------- /v1/generate ------+
+```
+
+### Frontend (`apps/web`)
+
+| Piece | Choice | Why it is here |
+|---|---|---|
+| Runtime | **Next.js 15.5** App Router, **React 19**, **TypeScript 5.9** (strict) | Static/SSR landing plus client wizards; deploys on Vercel with `Root Directory` = `apps/web` |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/postcss`), CSS variables in `globals.css` | Paper-like stone palette (`#f4efe6` / rust `#9a3412`); no separate `tailwind.config` |
+| UI kit | **shadcn/ui** New York + **Radix** (button, card, input, textarea, checkbox, label) | Accessible primitives; `class-variance-authority`, `clsx`, `tailwind-merge` |
+| Icons / type | **Lucide**, **Geist** + **Source Serif 4** (Google fonts) | Header wordmark is serif; body is sans |
+| i18n | Hand-rolled `src/i18n` — JSON for **en / es / pt / de** | UI locale in `localStorage` (`ats-ui-locale` only). Output language (`keep` or a locale) is sent to the API separately so the CV can be rewritten without changing the chrome |
+| API client | `src/lib/api.ts` + shared types | `NEXT_PUBLIC_API_URL` (default `http://127.0.0.1:8000`). Analyze uses `FormData`; assemble/generate use JSON. Downloads are blobs with `Cache-Control: no-store` on the API |
+
+Routes: `/` landing, `/analyze` upload + issues + recommendation card + download, `/assemble` plain-text sections → structured CV.
+
+### Backend (`apps/api`)
+
+| Piece | Choice | Why it is here |
+|---|---|---|
+| API | **FastAPI 0.116**, **Pydantic v2** models in `app/models/schemas.py` | Typed `/v1/analyze`, `/v1/assemble`, `/v1/generate`, `GET /health`. Field aliases accept `startDate` / `start_date` from Groq |
+| Config | **pydantic-settings** (`app/config.py`) | Reads `apps/api/.env`; extra env keys ignored |
+| Server | **Gunicorn** + **UvicornWorker** (`start.sh`); `make api-dev` is uvicorn `--reload` | Render uses `start.sh`. Defaults: bind `0.0.0.0:8000`, 2 workers, 120s timeout (Groq can be slow) |
+| Uploads | **python-multipart**, 3 MB cap | PDF or DOCX only |
+| CORS | FastAPI `CORSMiddleware` | `ALLOWED_ORIGIN` comma-separated; credentials off; `GET`/`POST`/`OPTIONS` |
+
+Request path:
+
+1. **Analyze** — extract text → heuristic ATS checks (`ats_rules.py`) → Groq structured rewrite → `ResumeSections` + issues.
+2. **Assemble** — JSON sections in → Groq rewrite (no invented employers/dates) → recommendation.
+3. **Generate** — no model; `documents.py` renders DOCX or PDF from `sections`. Analyze download posts those Groq sections, not the raw PDF preview.
+
+### Documents
+
+| Direction | Library | Behavior |
+|---|---|---|
+| PDF in | **pdfminer.six** first, **pypdf** fallback | pdfminer is quieter on broken object streams; pypdf loggers are raised to `ERROR` |
+| DOCX in | **python-docx** | Paragraph text only |
+| DOCX out | **python-docx** | Headings + paragraphs; generator stamp rewritten to `ats-assistant` |
+| PDF out | **fpdf2** (core Helvetica, latin-1) | Unicode bullets/dashes mapped to ASCII so they do not become `?`. Accented ES/PT/DE letters are in latin-1 and kept |
+
+Prompts are truncated around **6000** characters (`PROMPT_CHAR_LIMIT`). The UI preview is a shorter extract (`textPreview`).
+
+### AI (Groq)
+
+- SDK: **groq** Python client, 45s timeout.
+- Model: **`openai/gpt-oss-120b`** (open-weight; Groq does not train on API data). Override with `GROQ_MODEL`.
+- `chat.completions` with `response_format: json_object`, temperature `0.2`, max 4096 tokens.
+- System prompt pins `detectedLanguage`, `outputLanguage`, `issues`, and camelCase `sections` (`contact`, `summary`, `skills`, `experience`, `education`, `extras`).
+- Parser also accepts `recommendation` / `resume` if `sections` is missing. Empty CVs (no summary, skills, jobs, or education) fail the analyze/assemble call with **502** instead of a blank download.
+
+### Rate limits
+
+SQLite WAL file at `apps/api/data/rate_limit.sqlite` — **timestamps and salted IP hashes only**, never file bytes or CV text. `RATE_LIMIT_SALT` is mixed in before SHA-256.
+
+| Limit | Default | Applies to |
+|---|---|---|
+| Burst | 5 POST / minute / IP | All mutating routes |
+| Session | 3 Groq calls / hour / IP | Analyze + assemble |
+| In-flight | 1 global Groq lock | Shared process |
+| Spacing | 20s between Groq calls | Everyone |
+| Daily budget | 30 Groq calls / UTC day | Everyone |
+
+429 responses send `Retry-After` and `X-RateLimit-*`.
+
+### Hosting
+
+| App | Platform | Notes |
+|---|---|---|
+| Web | **Vercel** | Root `apps/web`; set `NEXT_PUBLIC_API_URL` to the Render origin (no trailing slash) |
+| API | **Render** | Blueprint `render.yaml`; Python runtime; health `GET /health`; free instances sleep |
+
+Node **20+** and Python **3.11+** locally. Do not put `GROQ_API_KEY` in the Next.js client.
 
 ## Local run
 
